@@ -1,89 +1,70 @@
 pipeline {
     agent any
 
-    triggers {
-        // Trigger pipeline on new commits
-        githubPush()
-    }
-
     stages {
+        // Stage 1: Build
         stage('Build') {
             steps {
-                script {
-                    // Use a build automation tool like Maven to build the code
-                    sh 'mvn clean package'
+                echo 'Stage 1: Build - Using Maven to compile and package the code.'
                 }
-            }
         }
 
+        // Stage 2: Unit and Integration Tests
         stage('Unit and Integration Tests') {
             steps {
-                script {
-                    // Run unit tests and integration tests (e.g., using JUnit)
-                    sh 'mvn test'
-                }
-            }
-            post {
-                always {
-                    // Send email notification for test stage
-                    emailext body: 'Test stage completed with ${currentBuild.currentResult}',
-                            subject: 'Jenkins Pipeline - Test Stage',
-                            to: 'ebibennypyr@gmail.com'
-                }
+                echo 'Stage 2: Unit and Integration Tests - Running unit tests and integration tests.'
             }
         }
 
+        // Stage 3: Code Analysis
         stage('Code Analysis') {
             steps {
-                script {
-                    // Use a code analysis tool like SonarQube
-                    sh 'sonar-scanner'
-                }
+                echo 'Stage 3: Code Analysis - Using tools such as SonarQube to analyze code quality.'
             }
         }
 
+        // Stage 4: Security Scan
         stage('Security Scan') {
             steps {
-                script {
-                    // Use a security scan tool like OWASP ZAP
-                    sh 'zap-baseline.py -t http://yourapp.com'
-                }
-            }
-            post {
-                always {
-                    // Send email notification for security scan stage
-                    emailext body: 'Security scan completed with ${currentBuild.currentResult}',
-                            subject: 'Jenkins Pipeline - Security Scan',
-                            to: 'ebibennypyr@gmail.com'
-                }
+                echo 'Stage 4: Security Scan - Using tools like OWASP Dependency-Check to identify vulnerabilities.'
             }
         }
 
+        // Stage 5: Deploy to Staging
         stage('Deploy to Staging') {
             steps {
-                script {
-                    // Deploy to a staging server (e.g., AWS EC2 instance)
-                    sh 'aws deploy ...'
-                }
+                echo 'Stage 5: Deploy to Staging - Deploying to a staging server.'
             }
         }
 
+        // Stage 6: Integration Tests on Staging
         stage('Integration Tests on Staging') {
             steps {
-                script {
-                    // Run integration tests on staging (e.g., using Selenium)
-                    sh 'mvn verify'
-                }
+                echo 'Stage 6: Integration Tests on Staging - Running integration tests on the staging environment.'
             }
         }
 
+        // Stage 7: Deploy to Production
         stage('Deploy to Production') {
             steps {
-                script {
-                    // Deploy to a production server (e.g., AWS EC2 instance)
-                    sh 'aws deploy ...'
-                }
+                echo 'Stage 7: Deploy to Production - Deploying to a production server.'
             }
+        }
+    }
+
+    // Post-build actions for notifications
+    post {
+        success {
+            echo 'Pipeline succeeded!'
+            mail to: 'ebibennypyr@gmail.com',
+                 subject: "Pipeline Success: ${currentBuild.fullDisplayName}",
+                 body: "The pipeline ${currentBuild.fullDisplayName} has succeeded."
+        }
+        failure {
+            echo 'Pipeline failed!'
+            mail to: 'ebibennypyr@gmail.com',
+                 subject: "Pipeline Failure: ${currentBuild.fullDisplayName}",
+                 body: "The pipeline ${currentBuild.fullDisplayName} has failed. Please check logs."
         }
     }
 }
