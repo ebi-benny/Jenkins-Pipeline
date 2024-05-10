@@ -1,60 +1,95 @@
 pipeline {
-  agent any
-
-  stages {
-    stage('Build') {
-      steps {
-        echo 'Stage 1: Build - Use tool like Maven to compile and package the code.'
-      }
+    agent any
+    environment {
+        EMAIL_RECIPIENTS = 'ebibennypyr@gmail.com' 
     }
 
-    stage('Unit and Integration Tests') {
-      steps {
-        echo 'Stage 2: Unit and Integration Tests - Using TestNG for unit tests and Selenium for integration tests.'
-      }
+    // Define stages in the pipeline
+    stages {
+        // Stage 1: Build
+        stage('Build') {
+            steps {
+                echo 'Building the code...'
+                // Use a build automation tool such as Maven
+                sh 'mvn clean install'
+            }
+        }
+
+        // Stage 2: Unit and Integration Tests
+        stage('Unit and Integration Tests') {
+            steps {
+                echo 'Running unit and integration tests...'
+                // Run tests with a test automation tool
+                sh 'mvn test'
+            }
+        }
+
+        // Stage 3: Code Analysis
+        stage('Code Analysis') {
+            steps {
+                echo 'Performing code analysis...'
+                // Use a code analysis tool such as SonarQube
+                sh 'sonar-scanner'
+            }
+        }
+
+        // Stage 4: Security Scan
+        stage('Security Scan') {
+            steps {
+                echo 'Performing security scan...'
+                // Use a security scan tool such as Snyk
+                sh 'snyk test'
+            }
+        }
+
+        // Stage 5: Deploy to Staging
+        stage('Deploy to Staging') {
+            steps {
+                echo 'Deploying to staging environment...'
+                // Deploy the application to a staging server 
+                sh 'deploy-staging.sh'
+            }
+        }
+
+        // Stage 6: Integration Tests on Staging
+        stage('Integration Tests on Staging') {
+            steps {
+                echo 'Running integration tests on staging environment...'
+                // Run integration tests in the staging environment
+                sh 'run-integration-tests.sh'
+            }
+        }
+
+        // Stage 7: Deploy to Production
+        stage('Deploy to Production') {
+            steps {
+                echo 'Deploying to production environment...'
+                // Deploy the application to a production server 
+                sh 'deploy-production.sh'
+            }
+        }
     }
 
-    stage('Code Analysis') {
-      steps {
-        echo 'Stage 3: Code Analysis - Using Checkstyle to analyze code quality.'
-      }
-    }
+    // Post-build actions for notifications
+    post {
+        // Notify on successful pipeline completion
+        success {
+            echo 'Pipeline completed successfully!'
+            mail(
+                to: EMAIL_RECIPIENTS,
+                subject: "Jenkins Pipeline Success - ${env.JOB_NAME}",
+                body: "The Jenkins pipeline for ${env.JOB_NAME} completed successfully."
+            )
+        }
 
-    stage('Security Scan') {
-      steps {
-        echo 'Stage 4: Security Scan - Using tools like OWASP Dependency-Check or to identify vulnerabilities.'
-      }
+        // Notify on pipeline failure
+        failure {
+            echo 'Pipeline failed!'
+            mail(
+                to: EMAIL_RECIPIENTS,
+                subject: "Jenkins Pipeline Failure - ${env.JOB_NAME}",
+                body: "The Jenkins pipeline for ${env.JOB_NAME} failed. Please check the logs for details."
+            )
+        }
     }
-
-    stage('Deploy to Staging') {
-      steps {
-        echo 'Stage 5: Deploy to Staging - Deploy to a staging server using Jenkins Deploy Plugin.'
-      }
-    }
-
-    stage('Integration Tests on Staging') {
-      steps {
-        echo 'Stage 6: Integration Tests on Staging - Run tests on the staging environment using Selenium .'
-      }
-    }
-
-    stage('Deploy to Production') {
-      steps {
-        echo 'Stage 7: Deploy to Production - Deploy to a production server using Ansible or Jenkins Deploy Plugin.'
-      }
-    }
-  }
-
-  post {
-    success {
-      mail to: 'ebibennypyr@gmail.com',
-           subject: "Pipeline Success: ${currentBuild.fullDisplayName}",
-           body: "The pipeline ${currentBuild.fullDisplayName} has succeeded."
-    }
-    failure {
-      mail to: 'ebibennypyr@gmail.com',
-           subject: "Pipeline Failure: ${currentBuild.fullDisplayName}",
-           body: "The pipeline ${currentBuild.fullDisplayName} has failed. Please check logs."
-    }
-  }
 }
