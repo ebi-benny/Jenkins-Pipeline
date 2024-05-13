@@ -59,14 +59,12 @@ pipeline {
             mail to: 'ebibennypyr@gmail.com',
                  subject: "Pipeline Success: ${currentBuild.fullDisplayName}",
                  body: "The pipeline ${currentBuild.fullDisplayName} has succeeded.",
-                 attachLog: True
         }
         failure {
             echo 'Pipeline failed!'
             mail to: 'ebibennypyr@gmail.com',
                  subject: "Pipeline Failure: ${currentBuild.fullDisplayName}",
                  body: "The pipeline ${currentBuild.fullDisplayName} has failed. Please check logs.",
-                 attachLog: True
         }
     }
 }
