@@ -1,71 +1,97 @@
 pipeline {
     agent any
 
+    environment {
+        CODE_DIRECTORY = "/path/to/code"
+        TEST_ENV = "testing"
+        PROD_ENV = "yourname_production"
+        NOTIFICATION_EMAIL = "ebibennypyr@gmail.com"
+    }
+
     stages {
-        // Stage 1: Build
         stage('Build') {
             steps {
-                echo 'Stage 1: Build - Using Maven to compile and package the code.'
-                }
+                echo "Fetching the source code from: $CODE_DIRECTORY"
+                echo "Compiling the code and generating artifacts"
+            }
         }
-
-        // Stage 2: Unit and Integration Tests
         stage('Unit and Integration Tests') {
             steps {
-                echo 'Stage 2: Unit and Integration Tests - Running unit tests and integration tests.'
+                echo "Running unit tests"
+                echo "Running integration tests"
+            }
+            post {
+                success {
+                    mail to: "${env.NOTIFICATION_EMAIL}",
+                         subject: "Unit and Integration Tests Passed",
+                         body: "Unit and Integration Tests have passed successfully. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
+                         mimeType: 'text/html'
+                }
+                failure {
+                    mail to: "${env.NOTIFICATION_EMAIL}",
+                         subject: "Unit and Integration Tests Failed",
+                         body: "Unit and Integration Tests have failed. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
+                         mimeType: 'text/html'
+                }
             }
         }
-
-        // Stage 3: Code Analysis
         stage('Code Analysis') {
             steps {
-                echo 'Stage 3: Code Analysis - Using tools such as SonarQube to analyze code quality.'
+                echo 'Checking the quality of the code'
             }
         }
-
-        // Stage 4: Security Scan
         stage('Security Scan') {
             steps {
-                echo 'Stage 4: Security Scan - Using tools like OWASP Dependency-Check to identify vulnerabilities.'
+                echo 'Performing security scan'
+            }
+            post {
+                success {
+                    mail to: "${env.NOTIFICATION_EMAIL}",
+                         subject: "Security Scan Passed",
+                         body: "Security scan completed without any issues. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
+                         mimeType: 'text/html'
+                }
+                failure {
+                    mail to: "${env.NOTIFICATION_EMAIL}",
+                         subject: "Security Scan Failed",
+                         body: "Security scan has some issues. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
+                         mimeType: 'text/html'
+                }
             }
         }
-
-        // Stage 5: Deploy to Staging
         stage('Deploy to Staging') {
             steps {
-                echo 'Stage 5: Deploy to Staging - Deploying to a staging server.'
+                echo "Deploying the application to the $TEST_ENV environment"
             }
         }
-
-        // Stage 6: Integration Tests on Staging
         stage('Integration Tests on Staging') {
             steps {
-                echo 'Stage 6: Integration Tests on Staging - Running integration tests on the staging environment.'
+                echo "Running integration tests on staging environment"
             }
         }
-
-        // Stage 7: Deploy to Production
         stage('Deploy to Production') {
             steps {
-                echo 'Stage 7: Deploy to Production - Deploying to a production server.'
+                echo "Deploying the code to the $PROD_ENV environment"
             }
         }
     }
 
-    // Post-build actions for notifications
     post {
-        success {
-            echo 'Pipeline succeeded!'
-            mail to: 'ebibennypyr@gmail.com',
-                 subject: "Pipeline Success: ${currentBuild.fullDisplayName}",
-                 body: "The pipeline ${currentBuild.fullDisplayName} has succeeded.",
-        }
-        failure {
-            echo 'Pipeline failed!'
-            mail to: 'ebibennypyr@gmail.com',
-                 subject: "Pipeline Failure: ${currentBuild.fullDisplayName}",
-                 body: "The pipeline ${currentBuild.fullDisplayName} has failed. Please check logs.",
+        always {
+            emailext (
+                subject: "Pipeline Status: ${currentBuild.result}",
+                body: '''<html>
+                    <body>
+                    <p>Build Status: ${currentBuild.result}</p>
+                    <p>Build Number: ${currentBuild.number}</p>
+                    <p>Console Output: <a href="${env.BUILD_URL}console">${env.BUILD_URL}console</a></p>
+                    </body>
+                    </html>''',
+                to: 'ebibennypyr@gmail.com',
+                from: 'jenkins@example.com',
+                replyTo: 'jenkins@example.com',
+                mimeType: 'text/html'
+            )
         }
     }
 }
-
