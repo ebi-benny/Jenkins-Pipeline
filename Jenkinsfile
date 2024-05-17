@@ -9,12 +9,14 @@ pipeline {
     }
 
     stages {
+        // Stage 1: Build
         stage('Build') {
             steps {
                 echo "Fetching the source code from: $CODE_DIRECTORY"
                 echo "Compiling the code and generating artifacts"
             }
         }
+        // Stage 2: Unit and Integration Tests
         stage('Unit and Integration Tests') {
             steps {
                 echo "Running unit tests"
@@ -22,12 +24,14 @@ pipeline {
             }
             post {
                 success {
+                     // Send email notification if tests pass
                     mail to: "${env.NOTIFICATION_EMAIL}",
                          subject: "Unit and Integration Tests Passed",
                          body: "Unit and Integration Tests have passed successfully. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
                          mimeType: 'text/html'
                 }
                 failure {
+                    // Send email notification if tests fail
                     mail to: "${env.NOTIFICATION_EMAIL}",
                          subject: "Unit and Integration Tests Failed",
                          body: "Unit and Integration Tests have failed. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
@@ -35,23 +39,27 @@ pipeline {
                 }
             }
         }
+        // Stage 3: Code Analysis
         stage('Code Analysis') {
             steps {
                 echo 'Checking the quality of the code'
             }
         }
+         // Stage 4: Security Scan
         stage('Security Scan') {
             steps {
                 echo 'Performing security scan'
             }
             post {
                 success {
+                    // Send email notification if security scan passes
                     mail to: "${env.NOTIFICATION_EMAIL}",
                          subject: "Security Scan Passed",
                          body: "Security scan completed without any issues. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
                          mimeType: 'text/html'
                 }
                 failure {
+                    // Send email notification if security scan fails
                     mail to: "${env.NOTIFICATION_EMAIL}",
                          subject: "Security Scan Failed",
                          body: "Security scan has some issues. See attached logs for details.<br>Console Output: ${env.BUILD_URL}console",
@@ -59,16 +67,19 @@ pipeline {
                 }
             }
         }
+         // Stage 5: Deploy to Staging
         stage('Deploy to Staging') {
             steps {
                 echo "Deploying the application to the $TEST_ENV environment"
             }
         }
+        // Stage 6: Integration Tests on Staging
         stage('Integration Tests on Staging') {
             steps {
                 echo "Running integration tests on staging environment"
             }
         }
+         // Stage 7: Deploy to Production
         stage('Deploy to Production') {
             steps {
                 echo "Deploying the code to the $PROD_ENV environment"
@@ -76,6 +87,7 @@ pipeline {
         }
     }
 
+    // Post-build actions for notifications
     post {
         always {
             emailext (
